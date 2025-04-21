@@ -1,0 +1,1961 @@
+openapi: 3.0.3
+info:
+  title: TatooDenda API
+  description: API para la tienda online de tatuajes y piercings TatooDenda
+  version: 1.0.0
+  contact:
+    name: Soporte TatooDenda
+    email: support@tatoodenda.com
+
+servers:
+  - url: http://localhost:3000/api
+    description: Servidor de desarrollo
+  - url: https://api.tatoodenda.com/api
+    description: Servidor de producción
+
+tags:
+  - name: auth
+    description: Operaciones de autenticación y usuarios
+  - name: categories
+    description: Operaciones relacionadas con categorías de productos
+  - name: products
+    description: Operaciones relacionadas con productos
+  - name: orders
+    description: Operaciones relacionadas con pedidos
+  - name: health
+    description: Verificación del estado de la API
+
+paths:
+  # Rutas de usuarios
+  /users/register:
+    post:
+      tags:
+        - auth
+      summary: Registra un nuevo usuario
+      description: Crea una nueva cuenta de usuario en el sistema
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        201:
+          description: Usuario creado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        400:
+          description: Datos inválidos o usuario ya existente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/login:
+    post:
+      tags:
+        - auth
+      summary: Inicia sesión
+      description: Autentica un usuario y devuelve un token JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        200:
+          description: Inicio de sesión exitoso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        401:
+          description: Credenciales inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/profile:
+    get:
+      tags:
+        - auth
+      summary: Obtiene perfil del usuario actual
+      description: Devuelve los datos del usuario autenticado
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Perfil obtenido correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        401:
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/{id}:
+    put:
+      tags:
+        - auth
+      summary: Actualiza un usuario
+      description: Actualiza los datos de un usuario específico
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID del usuario a actualizar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        200:
+          description: Usuario actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        401:
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Rutas de categorías
+  /categorias:
+    get:
+      tags:
+        - categories
+      summary: Obtiene todas las categorías
+      description: Lista todas las categorías disponibles en la tienda
+      responses:
+        200:
+          description: Lista de categorías obtenida correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - categories
+      summary: Crea una nueva categoría
+      description: Crea una nueva categoría en el sistema (solo admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+      responses:
+        201:
+          description: Categoría creada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        400:
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: No autorizado (se requiere rol admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /categorias/{id}:
+    get:
+      tags:
+        - categories
+      summary: Obtiene una categoría específica
+      description: Obtiene los detalles de una categoría por su ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de la categoría a consultar
+      responses:
+        200:
+          description: Categoría obtenida correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryWithDetails'
+        404:
+          description: Categoría no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - categories
+      summary: Actualiza una categoría
+      description: Actualiza los datos de una categoría específica (solo admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de la categoría a actualizar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+      responses:
+        200:
+          description: Categoría actualizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        400:
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: No autorizado (se requiere rol admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Categoría no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+        - categories
+      summary: Elimina una categoría
+      description: Elimina una categoría específica (solo admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de la categoría a eliminar
+      responses:
+        200:
+          description: Categoría eliminada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Categoría eliminada con éxito
+        400:
+          description: No se puede eliminar (tiene subcategorías o productos asociados)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: No autorizado (se requiere rol admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Categoría no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Rutas de productos
+  /productos:
+    get:
+      tags:
+        - products
+      summary: Obtiene todos los productos
+      description: Lista todos los productos disponibles en la tienda (con filtro opcional por categoría)
+      parameters:
+        - name: categoria
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: ID de la categoría para filtrar productos
+      responses:
+        200:
+          description: Lista de productos obtenida correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - products
+      summary: Crea un nuevo producto
+      description: Crea un nuevo producto en el sistema (solo admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+      responses:
+        201:
+          description: Producto creado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        400:
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: No autorizado (se requiere rol admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+                
+  /productos/search:
+    get:
+      tags:
+        - products
+      summary: Busca productos por término
+      description: Busca productos que coincidan con el término en nombre o descripción
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Término de búsqueda
+      responses:
+        200:
+          description: Resultados de búsqueda obtenidos correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        400:
+          description: Término de búsqueda no proporcionado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+                
+  /productos/{id}:
+    get:
+      tags:
+        - products
+      summary: Obtiene un producto específico
+      description
+      # Esquema de error genérico
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Mensaje de error principal
+          example: Error al procesar la solicitud
+        details:
+          type: string
+          description: Detalles adicionales del error (opcional)
+          example: Formato de datos incorrecto
+        errors:
+          type: array
+          description: Lista de errores de validación (opcional)
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Campo con error
+                example: email
+              message:
+                type: string
+                description: Mensaje de error para el campo
+                example: Debe ser un email válido    OrderLine:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        idpedido:
+          type: integer
+          example: 1
+          description: ID del pedido al que pertenece
+        idprod:
+          type: integer
+          example: 1
+          description: ID del producto
+        color:
+          type: string
+          example: Negro
+          description: Color seleccionado
+        cant:
+          type: integer
+          example: 2
+          description: Cantidad
+        nombre:
+          type: string
+          example: Tatuaje Tribal
+          description: Nombre del producto (para mantener histórico)
+        createdAt:
+          type: string
+          format: date-time
+          example: 2023-04-15T14:30:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2023-04-15T14:30:00Z
+          
+    OrderRequest:
+      type: object
+      required:
+        - iduser
+        - total
+        - lineas
+      properties:
+        iduser:
+          type: integer
+          example: 2
+          description: ID del usuario que realiza el pedido
+        fecha:
+          type: string
+          format: date
+          example: 2023-04-15
+          description: Fecha del pedido (opcional, se usa la fecha actual si no se proporciona)
+        total:
+          type: number
+          format: float
+          example: 125.50
+          description: Importe total del pedido
+        lineas:
+          type: array
+          items:
+            type: object
+            required:
+              - idprod
+              - color
+              - cant
+            properties:
+              idprod:
+                type: integer
+                example: 1
+                description: ID del producto
+              color:
+                type: string
+                example: Negro
+                description: Color seleccionado
+              cant:
+                type: integer
+                example: 2
+                description: Cantidad
+              nombre:
+                type: string
+                example: Tatuaje Tribal
+                description: Nombre del producto (opcional)
+          description: Líneas del pedido (productos)    # Esquemas de pedidos
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        iduser:
+          type: integer
+          example: 2
+          description: ID del usuario que realizó el pedido
+        fecha:
+          type: string
+          format: date
+          example: 2023-04-15
+        total:
+          type: number
+          format: float
+          example: 125.50
+        lineas:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderLine'
+          description: Líneas del pedido (productos)
+        createdAt:
+          type: string
+          format: date-time
+          example: 2023-04-15T14:30:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2023-04-15T14:30:00Z
+          
+    OrderDetail:
+      allOf:
+        - $ref: '#/components/schemas/Order'
+        - type: object
+          properties:
+            user:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 2
+                username:
+                  type: string
+                  example: user123
+                nombre:
+                  type: string
+                  example: Usuario Ejemplo
+                email:
+                  type: string
+                  format: email
+                  example: usuario@ejemplo.com
+              description: Información del usuario que realizó el pedido
+            lineas:
+              type: array
+              items:
+                allOf:
+                  - $ref: '#/components/schemas/OrderLine'
+                  - type: object
+                    properties:
+                      product:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          nombre:
+                            type: string
+                            example: Tatuaje Tribal
+                          precio:
+                            type: number
+                            format: float
+                            example: 75.99
+                          imagen:
+                            type: string
+                            example: tribal-main.jpg
+                          carpetaimg:
+                            type: string
+                            example: tribal
+                        description: Información del producto
+              description: Líneas del pedido con información adicional    ProductRequest:
+      type: object
+      required:
+        - nombre
+        - descripcion
+        - precio
+        - carpetaimg
+        - imagen
+        - categoria
+      properties:
+        nombre:
+          type: string
+          example: Tatuaje Tribal
+        descripcion:
+          type: string
+          example: Tatuaje de estilo tribal con diseños geométricos. Ideal para brazos y piernas.
+        precio:
+          type: number
+          format: float
+          example: 75.99
+        carpetaimg:
+          type: string
+          example: tribal
+          description: Carpeta donde se almacenan las imágenes
+        imagen:
+          type: string
+          example: tribal-main.jpg
+          description: Nombre de archivo de la imagen principal
+        categoria:
+          type: integer
+          example: 4
+          description: ID de la categoría a la que pertenece
+          
+    ProductColor:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        idprod:
+          type: integer
+          example: 1
+          description: ID del producto al que pertenece
+        color:
+          type: string
+          example: Negro
+          description: Nombre del color
+        imagen:
+          type: string
+          example: tribal-negro.jpg
+          description: Nombre de archivo de la imagen para este color
+        createdAt:
+          type: string
+          format: date-time
+          example: 2023-04-01T12:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2023-04-01T12:00:00Z
+          
+    ProductColorRequest:
+      type: object
+      required:
+        - color
+        - imagen
+      properties:
+        color:
+          type: string
+          example: Rojo
+          description: Nombre del color
+        imagen:
+          type: string
+          example: tribal-rojo.jpg
+          description: Nombre de archivo de la imagen para este color    # Esquemas de categorías
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nombre:
+          type: string
+          example: Tatuajes
+        padre:
+          type: integer
+          example: 1
+          description: ID de la categoría padre. Para categorías principales, es su propio ID.
+        createdAt:
+          type: string
+          format: date-time
+          example: 2023-04-01T12:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2023-04-01T12:00:00Z
+          
+    CategoryWithDetails:
+      allOf:
+        - $ref: '#/components/schemas/Category'
+        - type: object
+          properties:
+            childCategories:
+              type: array
+              items:
+                $ref: '#/components/schemas/Category'
+              description: Subcategorías de esta categoría
+            productsCount:
+              type: integer
+              example: 15
+              description: Número de productos en esta categoría
+              
+    CategoryRequest:
+      type: object
+      required:
+        - nombre
+        - padre
+      properties:
+        nombre:
+          type: string
+          example: Tatuajes Medianos
+        padre:
+          type: string
+          example: 1
+          description: ID de la categoría padre o "sin" para categoría principal
+          
+    # Esquemas de productos
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nombre:
+          type: string
+          example: Tatuaje Tribal
+        descripcion:
+          type: string
+          example: Tatuaje de estilo tribal con diseños geométricos. Ideal para brazos y piernas.
+        precio:
+          type: number
+          format: float
+          example: 75.99
+        carpetaimg:
+          type: string
+          example: tribal
+          description: Carpeta donde se almacenan las imágenes
+        imagen:
+          type: string
+          example: tribal-main.jpg
+          description: Nombre de archivo de la imagen principal
+        categoria:
+          type: integer
+          example: 4
+          description: ID de la categoría a la que pertenece
+        categoryInfo:
+          $ref: '#/components/schemas/Category'
+          description: Información de la categoría (solo en respuestas)
+        createdAt:
+          type: string
+          format: date-time
+          example: 2023-04-01T12:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2023-04-01T12:00:00Z  # Verificación de estado
+  /health:
+    get:
+      tags:
+        - health
+      summary: Verifica el estado de la API
+      description: Devuelve información sobre el estado actual de la API
+      responses:
+        200:
+          description: API funcionando correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: OK
+                  message:
+                    type: string
+                    example: API funcionando correctamente
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT de autorización
+
+  schemas:
+    # Esquemas de autenticación y usuarios
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: user123
+        password:
+          type: string
+          format: password
+          example: miPassword123
+          
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - password
+        - email
+        - nombre
+        - direccion
+        - ciudad
+        - cp
+      properties:
+        username:
+          type: string
+          example: user123
+        password:
+          type: string
+          format: password
+          example: miPassword123
+        email:
+          type: string
+          format: email
+          example: usuario@ejemplo.com
+        nombre:
+          type: string
+          example: Usuario Ejemplo
+        direccion:
+          type: string
+          example: Calle Principal 123
+        ciudad:
+          type: string
+          example: Madrid
+        cp:
+          type: string
+          example: 28001
+          
+    UpdateUserRequest:
+      type: object
+      properties:
+        password:
+          type: string
+          format: password
+          example: nuevoPassword123
+        email:
+          type: string
+          format: email
+          example: nuevo@ejemplo.com
+        nombre:
+          type: string
+          example: Nuevo Nombre
+        direccion:
+          type: string
+          example: Nueva Dirección 456
+        ciudad:
+          type: string
+          example: Barcelona
+        cp:
+          type: string
+          example: 08001
+          
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: user123
+        nombre:
+          type: string
+          example: Usuario Ejemplo
+        email:
+          type: string
+          format: email
+          example: usuario@ejemplo.com
+        direccion:
+          type: string
+          example: Calle Principal 123
+        ciudad:
+          type: string
+          example: Madrid
+        cp:
+          type: string
+          example: 28001
+        role:
+          type: string
+          enum: [user, admin]
+          example: user
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          description: Token JWT (solo en respuestas de login)
+        createdAt:
+          type: string
+          format: date-time
+          example: 2023-04-01T12:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2023-04-01T12:00:00Z  /pedidos/user/{userId}:
+    get:
+      tags:
+        - orders
+      summary: Obtiene pedidos de un usuario
+      description: Obtiene todos los pedidos de un usuario específico
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID del usuario
+      responses:
+        200:
+          description: Pedidos obtenidos correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+        401:
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: No autorizado para ver estos pedidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'  /pedidos/{id}:
+    get:
+      tags:
+        - orders
+      summary: Obtiene un pedido específico
+      description: Obtiene los detalles de un pedido por su ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID del pedido a consultar
+      responses:
+        200:
+          description: Pedido obtenido correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetail'
+        401:
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: No autorizado para ver este pedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Pedido no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'  # Rutas de pedidos
+  /pedidos:
+    post:
+      tags:
+        - orders
+      summary: Crea un nuevo pedido
+      description: Crea un nuevo pedido para el usuario autenticado
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      responses:
+        201:
+          description: Pedido creado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        400:
+          description: Datos inválidos o pedido vacío
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: No autorizado para crear pedidos para otro usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'  /productos/{id}/images:
+    post:
+      tags:
+        - products
+      summary: Sube imágenes para un producto
+      description: Sube una o más imágenes para un producto específico (solo admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID del producto
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Archivos de imagen a subir (máximo 10)
+      responses:
+        200:
+          description: Imágenes subidas correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Imágenes subidas con éxito
+                  files:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        filename:
+                          type: string
+                          example: image-1234567890.jpg
+                        path:
+                          type: string
+                          example: products/carpeta/image-1234567890.jpg
+        400:
+          description: No se han subido archivos o formato incorrecto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: No autorizado (se requiere rol admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'  /productos/{id}/colores:
+    get:
+      tags:
+        - products
+      summary: Obtiene colores de un producto
+      description: Obtiene los colores disponibles para un producto específico
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID del producto a consultar
+      responses:
+        200:
+          description: Colores obtenidos correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductColor'
+        404:
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - products
+      summary: Añade un color a un producto
+      description: Añade un nuevo color a un producto específico (solo admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID del producto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductColorRequest'
+      responses:
+        201:
+          description: Color añadido correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductColor'
+        400:
+          description: Datos inválidos o color duplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: No autorizado (se requiere rol admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'openapi: 3.0.3
+info:
+  title: TatooDenda API
+  description: API para la tienda online de tatuajes y piercings TatooDenda
+  version: 1.0.0
+  contact:
+    name: Soporte TatooDenda
+    email: support@tatoodenda.com
+
+servers:
+  - url: http://localhost:3000/api
+    description: Servidor de desarrollo
+  - url: https://api.tatoodenda.com/api
+    description: Servidor de producción
+
+tags:
+  - name: auth
+    description: Operaciones de autenticación y usuarios
+  - name: categories
+    description: Operaciones relacionadas con categorías de productos
+  - name: products
+    description: Operaciones relacionadas con productos
+  - name: orders
+    description: Operaciones relacionadas con pedidos
+  - name: health
+    description: Verificación del estado de la API
+
+paths:
+  # Rutas de usuarios
+  /users/register:
+    post:
+      tags:
+        - auth
+      summary: Registra un nuevo usuario
+      description: Crea una nueva cuenta de usuario en el sistema
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        201:
+          description: Usuario creado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        400:
+          description: Datos inválidos o usuario ya existente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/login:
+    post:
+      tags:
+        - auth
+      summary: Inicia sesión
+      description: Autentica un usuario y devuelve un token JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        200:
+          description: Inicio de sesión exitoso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        401:
+          description: Credenciales inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/profile:
+    get:
+      tags:
+        - auth
+      summary: Obtiene perfil del usuario actual
+      description: Devuelve los datos del usuario autenticado
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Perfil obtenido correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        401:
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/{id}:
+    put:
+      tags:
+        - auth
+      summary: Actualiza un usuario
+      description: Actualiza los datos de un usuario específico
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID del usuario a actualizar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        200:
+          description: Usuario actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        401:
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Rutas de categorías
+  /categorias:
+    get:
+      tags:
+        - categories
+      summary: Obtiene todas las categorías
+      description: Lista todas las categorías disponibles en la tienda
+      responses:
+        200:
+          description: Lista de categorías obtenida correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - categories
+      summary: Crea una nueva categoría
+      description: Crea una nueva categoría en el sistema (solo admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+      responses:
+        201:
+          description: Categoría creada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        400:
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: No autorizado (se requiere rol admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /categorias/{id}:
+    get:
+      tags:
+        - categories
+      summary: Obtiene una categoría específica
+      description: Obtiene los detalles de una categoría por su ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de la categoría a consultar
+      responses:
+        200:
+          description: Categoría obtenida correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryWithDetails'
+        404:
+          description: Categoría no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - categories
+      summary: Actualiza una categoría
+      description: Actualiza los datos de una categoría específica (solo admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de la categoría a actualizar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+      responses:
+        200:
+          description: Categoría actualizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        400:
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: No autorizado (se requiere rol admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Categoría no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+        - categories
+      summary: Elimina una categoría
+      description: Elimina una categoría específica (solo admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de la categoría a eliminar
+      responses:
+        200:
+          description: Categoría eliminada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Categoría eliminada con éxito
+        400:
+          description: No se puede eliminar (tiene subcategorías o productos asociados)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: No autorizado (se requiere rol admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Categoría no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Rutas de productos
+  /productos:
+    get:
+      tags:
+        - products
+      summary: Obtiene todos los productos
+      description: Lista todos los productos disponibles en la tienda (con filtro opcional por categoría)
+      parameters:
+        - name: categoria
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: ID de la categoría para filtrar productos
+      responses:
+        200:
+          description: Lista de productos obtenida correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - products
+      summary: Crea un nuevo producto
+      description: Crea un nuevo producto en el sistema (solo admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+      responses:
+        201:
+          description: Producto creado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        400:
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: No autorizado (se requiere rol admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+                
+  /productos/search:
+    get:
+      tags:
+        - products
+      summary: Busca productos por término
+      description: Busca productos que coincidan con el término en nombre o descripción
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Término de búsqueda
+      responses:
+        200:
+          description: Resultados de búsqueda obtenidos correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        400:
+          description: Término de búsqueda no proporcionado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+                
+  /productos/{id}:
+    get:
+      tags:
+        - products
+      summary: Obtiene un producto específico
+      description: Obtiene los detalles de un producto por su ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID del producto a consultar
+      responses:
+        200:
+          description: Producto obtenido correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        404:
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - products
+      summary: Actualiza un producto
+      description: Actualiza los datos de un producto específico (solo admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID del producto a actualizar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+      responses:
+        200:
+          description: Producto actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        400:
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: No autorizado (se requiere rol admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+        - products
+      summary: Elimina un producto
+      description: Elimina un producto específico (solo admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID del producto a eliminar
+      responses:
+        200:
+          description: Producto eliminado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Producto eliminado con éxito
+        401:
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: No autorizado (se requiere rol admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
