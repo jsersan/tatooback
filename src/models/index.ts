@@ -28,9 +28,9 @@ const sequelize = new Sequelize(
 import UserModel from './user.model';
 import CategoryModel from './category.model';
 import ProductModel from './product.model';
-import ProductColorModel from './productColor.model';
+import ProductColorModel from './product-color.model';
 import OrderModel from './order.model';
-import OrderLineModel from './orderLine.model';
+import OrderLineModel from './order-line.model';
 
 // Inicializar modelos
 const db: any = {
