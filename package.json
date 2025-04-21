@@ -1,0 +1,47 @@
+{
+  "name": "tatoodenda-backend",
+  "version": "1.0.0",
+  "description": "Backend para la tienda online Tatoodenda",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc", // Compila el código TypeScript
+    "start": "node dist/server.js", // Inicia la aplicación compilada
+    "dev": "ts-node-dev --respawn src/server.ts", // Ejecuta en modo desarrollo con reinicio automático
+    "lint": "eslint . --ext .ts", // Verifica el código con ESLint
+    "test": "jest" // Ejecuta pruebas unitarias
+  },
+  "keywords": [
+    "ecommerce",
+    "shop",
+    "api",
+    "express",
+    "typescript"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3", // Para hash de contraseñas
+    "cors": "^2.8.5", // Habilita CORS para la API
+    "dotenv": "^16.0.3", // Manejo de variables de entorno
+    "express": "^4.18.2", // Framework web
+    "jsonwebtoken": "^9.0.0", // Generación y verificación de tokens JWT
+    "multer": "^1.4.5-lts.1", // Manejo de subida de archivos
+    "mysql2": "^3.2.0", // Driver para MySQL
+    "sequelize": "^6.30.0" // ORM para base de datos
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.2", // Tipos para bcryptjs
+    "@types/cors": "^2.8.13", // Tipos para cors
+    "@types/express": "^4.17.17", // Tipos para express
+    "@types/jsonwebtoken": "^9.0.1", // Tipos para jsonwebtoken
+    "@types/multer": "^1.4.7", // Tipos para multer
+    "@types/node": "^18.15.11", // Tipos para Node.js
+    "@typescript-eslint/eslint-plugin": "^5.57.1", // Plugin ESLint para TypeScript
+    "@typescript-eslint/parser": "^5.57.1", // Parser ESLint para TypeScript
+    "eslint": "^8.37.0", // Linter para JavaScript/TypeScript
+    "jest": "^29.5.0", // Framework de pruebas
+    "ts-jest": "^29.1.0", // Integración de Jest con TypeScript
+    "ts-node-dev": "^2.0.0", // Ejecución de TypeScript con hot reload
+    "typescript": "^5.0.3" // Compilador de TypeScript
+  }
+}
