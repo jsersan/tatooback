@@ -154,7 +154,7 @@ const categoryController = {
         });
         
         // Verificar que no se cree un ciclo
-        if (subcategories.some(subcat => subcat.get('id') === categoryData.padre)) {
+        if (subcategories.some((subcat: any) => subcat.get('id') === categoryData.padre)) {
           return res.status(400).json({
             message: 'No se puede establecer como padre una de sus propias subcategorías'
           });

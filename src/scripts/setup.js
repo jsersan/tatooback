@@ -2,9 +2,9 @@
  * Script de configuración inicial del proyecto
  * Crea directorios necesarios, verifica dependencias y configura entorno 
  */
-const fs = require('fs');
-const path = require('path');
-const { execSync } = require('child_process');
+import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { execSync } from 'child_process';
 
 // Directorios a crear
 const directories = [
@@ -27,15 +27,15 @@ const configFiles = [
   {
     path: '.env.example',
     content: `# Configuración de entorno
-PORT=3000
-NODE_ENV=development
-DB_CONNECTION=mongodb
-DB_HOST=localhost
-DB_PORT=27017
-DB_DATABASE=myapp
-DB_USERNAME=
-DB_PASSWORD=
-`
+            PORT=3000
+            NODE_ENV=development
+            DB_CONNECTION=mongodb
+            DB_HOST=localhost
+            DB_PORT=27017
+            DB_DATABASE=myapp
+            DB_USERNAME=
+            DB_PASSWORD=
+            `
   },
   {
     path: 'config/app.js',
@@ -55,9 +55,9 @@ function createDirectories() {
   console.log('Creando estructura de directorios...');
   
   directories.forEach(dir => {
-    const dirPath = path.join(process.cwd(), dir);
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true });
+    const dirPath = join(process.cwd(), dir);
+    if (!existsSync(dirPath)) {
+      mkdirSync(dirPath, { recursive: true });
       console.log(`✓ Directorio creado: ${dir}`);
     } else {
       console.log(`→ Directorio ya existe: ${dir}`);
@@ -70,15 +70,15 @@ function createConfigFiles() {
   console.log('\nCreando archivos de configuración...');
   
   configFiles.forEach(file => {
-    const filePath = path.join(process.cwd(), file.path);
-    const dirName = path.dirname(filePath);
+    const filePath = join(process.cwd(), file.path);
+    const dirName = dirname(filePath);
     
-    if (!fs.existsSync(dirName)) {
-      fs.mkdirSync(dirName, { recursive: true });
+    if (!existsSync(dirName)) {
+      mkdirSync(dirName, { recursive: true });
     }
     
-    if (!fs.existsSync(filePath)) {
-      fs.writeFileSync(filePath, file.content);
+    if (!existsSync(filePath)) {
+      writeFileSync(filePath, file.content);
       console.log(`✓ Archivo creado: ${file.path}`);
     } else {
       console.log(`→ Archivo ya existe: ${file.path}`);
@@ -112,7 +112,7 @@ function installDependencies() {
   
   try {
     // Verificar si package.json existe
-    if (!fs.existsSync('package.json')) {
+    if (!existsSync('package.json')) {
       console.log('Inicializando package.json...');
       execSync('npm init -y', { stdio: 'inherit' });
     }
@@ -124,7 +124,7 @@ function installDependencies() {
     execSync('npm install --save-dev nodemon jest supertest', { stdio: 'inherit' });
     
     // Actualizar package.json con scripts útiles
-    const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+    const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
     packageJson.scripts = {
       ...packageJson.scripts,
       start: 'node src/index.js',
@@ -132,7 +132,7 @@ function installDependencies() {
       test: 'jest'
     };
     
-    fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2));
+    writeFileSync('package.json', JSON.stringify(packageJson, null, 2));
     console.log('✓ Scripts configurados en package.json');
     
   } catch (error) {
@@ -144,9 +144,9 @@ function installDependencies() {
 function createIndexFile() {
   console.log('\nCreando archivo de entrada de la aplicación...');
   
-  const indexPath = path.join(process.cwd(), 'src/index.js');
+  const indexPath = join(process.cwd(), 'src/index.js');
   
-  if (!fs.existsSync(indexPath)) {
+  if (!existsSync(indexPath)) {
     const indexContent = `require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -172,7 +172,7 @@ app.listen(PORT, () => {
 });
 `;
     
-    fs.writeFileSync(indexPath, indexContent);
+    writeFileSync(indexPath, indexContent);
     console.log(`✓ Archivo creado: src/index.js`);
   } else {
     console.log(`→ Archivo ya existe: src/index.js`);

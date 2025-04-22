@@ -4,8 +4,7 @@
  */
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { Secret } from 'jsonwebtoken';
+import jwt, {Secret} from 'jsonwebtoken';
 import db from '../models';
 import authConfig from '../config/auth';
 import { IUser, IUserResponse, ILoginRequest } from '../interfaces/user.interface';
@@ -18,14 +17,21 @@ const User = db.User;
  * @param userId ID del usuario para incluir en el payload
  * @returns Token JWT firmado
  */
+/**
+ * Generador de token JWT
+ * @param userId ID del usuario para incluir en el payload
+ * @returns Token JWT firmado
+ */
 const generateToken = (userId: number): string => {
-  return jwt.sign(
-    { id: userId },
-    authConfig.secret as Secret,
-    {
-      expiresIn: authConfig.expiresIn
-    }
+  // @ts-ignore
+  // Usar firma síncrona con tipos explícitos
+  const token = jwt.sign(
+    { id: userId } as object,
+    authConfig.secret.toString(),
+    { expiresIn: authConfig.expiresIn }
   );
+  
+  return token;
 };
 
 /**
@@ -33,11 +39,11 @@ const generateToken = (userId: number): string => {
  * @param user Modelo de usuario completo
  * @returns Versión segura para enviar al cliente
  */
-const sanitizeUser = (user: any): IUserResponse => {
+function sanitizeUser(user: any): IUserResponse {
   const userObject = user.toJSON();
   delete userObject.password; // Nunca enviar la contraseña al cliente
   return userObject;
-};
+}
 
 /**
  * Controlador de usuarios

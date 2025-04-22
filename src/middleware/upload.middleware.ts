@@ -54,6 +54,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
   }
 };
 
+
 /* Configuración de Multer
  * Exporta un middleware listo para usar en rutas */
 export const upload = multer({

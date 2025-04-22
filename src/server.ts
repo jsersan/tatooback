@@ -20,7 +20,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Configurar middleware
-app.use(cors()); // Habilita CORS para todas las rutas
+// Configurar CORS para permitir solicitudes desde tu aplicación Angular
+app.use(cors({
+  origin: 'http://localhost:4200', // URL de tu aplicación Angular
+  credentials: true
+}));
 app.use(express.json()); // Para parsear application/json
 app.use(express.urlencoded({ extended: true })); // Para parsear application/x-www-form-urlencoded
 
