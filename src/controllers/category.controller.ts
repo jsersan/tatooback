@@ -22,11 +22,11 @@ const categoryController = {
   findAll: async (req: Request, res: Response): Promise<Response> => {
     try {
       // Buscar todas las categorías
-      const categories = await Category.findAll({
+      const categoria = await Category.findAll({
         order: [['nombre', 'ASC']] // Ordenar alfabéticamente
       });
       
-      return res.json(categories);
+      return res.json(categoria);
     } catch (err) {
       console.error('Error al obtener categorías:', err);
       if (err instanceof Error) {

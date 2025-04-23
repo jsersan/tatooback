@@ -25,7 +25,7 @@ router.get('/:id', productController.findOne);
 
 /* GET /api/productos/:id/colores
  * Obtiene colores disponibles para un producto */
-router.get('/:id/colores', productController.getColors);
+router.get('/:id/color', productController.getColors);
 
 // Rutas administrativas (requieren autenticación y permisos de admin)
 /* POST /api/productos
@@ -42,7 +42,7 @@ router.delete('/:id', [verifyToken, isAdmin], productController.delete);
 
 /* POST /api/productos/:id/colores
  * Añade un color a un producto */
-router.post('/:id/colores', [verifyToken, isAdmin], productController.addColor);
+router.post('/:id/color', [verifyToken, isAdmin], productController.addColor);
 
 /* POST /api/productos/:id/images
  * Sube imágenes para un producto
