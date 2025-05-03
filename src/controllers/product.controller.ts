@@ -7,393 +7,199 @@ import path from 'path';
 import fs from 'fs';
 import db from '../models';
 import { IProduct } from '../interfaces/product.interface';
-import { Op } from 'sequelize';
 
-// Referencias a los modelos necesarios
-const Product = db.Product;
-const ProductColor = db.ProductColor;
-const Category = db.Category;
-
-/**
- * Controlador de productos
- */
-const productController = {
+class ProductController {
   /**
-   * Obtiene todos los productos (con filtro opcional por categoría)
-   * GET /api/productos
-   * GET /api/productos?categoria=:id
+   * Obtener todos los productos
    */
-  findAll: async (req: Request, res: Response): Promise<Response> => {
+  async index(req: Request, res: Response): Promise<Response> {
     try {
-      // Parámetros de consulta opcionales
-      const categoriaId = req.query.categoria ? parseInt(req.query.categoria as string) : null;
-
-      // Construir cláusula where según filtros
-      let whereClause: any = {};
-
-      if (categoriaId) {
-        whereClause.categoria = categoriaId;
-      }
-
-      // Buscar productos con filtros y relaciones
-      const products = await Product.findAll({
-        where: whereClause,
-        include: [
-          {
-            model: Category,
-            as: 'categoryInfo',
-            attributes: ['id', 'nombre']
-          }
-        ],
-        order: [['nombre', 'ASC']] // Ordenar alfabéticamente
+      const products = await db.Product.findAll({
+        include: [{
+          model: db.Category,
+          as: 'category'
+        }]
       });
 
-      return res.json(products);
-    } catch (err) {
-      console.error('Error al obtener productos:', err);
-      if (err instanceof Error) {
-        return res.status(500).json({ message: err.message });
-      }
-      return res.status(500).json({ message: 'Error al obtener productos' });
+      // Mapear los productos para incluir carpetaimg automáticamente
+      // Gracias al método toJSON() del modelo, ya se incluirá automáticamente
+      const productsJson = products.map((product: any) => product.toJSON());
+
+      console.log(`Total de productos encontrados: ${productsJson.length}`);
+      
+      return res.status(200).json(productsJson);
+    } catch (error) {
+      console.error('Error al obtener productos:', error);
+      return res.status(500).json({ 
+        message: 'Error al obtener productos', 
+        error: (error as Error).message 
+      });
     }
-  },
+  }
 
   /**
-   * Busca productos por término
-   * GET /api/productos/search?q=:term
+   * Obtener un producto por ID
    */
-  search: async (req: Request, res: Response): Promise<Response> => {
+  async show(req: Request, res: Response): Promise<Response> {
     try {
-      const term = req.query.q as string;
-
-      if (!term) {
-        return res.status(400).json({ message: 'Término de búsqueda requerido' });
-      }
-
-      // Buscar productos que coincidan con el término en nombre o descripción
-      const products = await Product.findAll({
-        where: {
-          [Op.or]: [
-            { nombre: { [Op.like]: `%${term}%` } },
-            { descripcion: { [Op.like]: `%${term}%` } }
-          ]
-        },
-        include: [
-          {
-            model: Category,
-            as: 'categoryInfo',
-            attributes: ['id', 'nombre']
-          }
-        ],
-        order: [['nombre', 'ASC']] // Ordenar alfabéticamente
-      });
-
-      return res.json(products);
-    } catch (err) {
-      console.error('Error al buscar productos:', err);
-      if (err instanceof Error) {
-        return res.status(500).json({ message: err.message });
-      }
-      return res.status(500).json({ message: 'Error al buscar productos' });
-    }
-  },
-
-  /* Obtiene un producto específico por ID
-   * GET /api/productos/:id */
-  findOne: async (req: Request, res: Response): Promise<Response> => {
-    try {
-      const id = parseInt(req.params.id);
-
-      // Buscar producto por ID con relaciones
-      const product = await Product.findByPk(id, {
-        include: [
-          {
-            model: Category,
-            as: 'categoryInfo',
-            attributes: ['id', 'nombre']
-          }
-        ]
+      const { id } = req.params;
+      
+      const product = await db.Product.findByPk(id, {
+        include: [{
+          model: db.Category,
+          as: 'category'
+        }]
       });
 
       if (!product) {
         return res.status(404).json({ message: 'Producto no encontrado' });
       }
 
-      return res.json(product);
-    } catch (err) {
-      console.error('Error al obtener producto:', err);
-      if (err instanceof Error) {
-        return res.status(500).json({ message: err.message });
-      }
-      return res.status(500).json({ message: 'Error al obtener el producto' });
-    }
-  },
-
-  /* Obtiene colores disponibles para un producto
-   * GET /api/productos/:id/colores */
-  getColors: async (req: Request, res: Response): Promise<Response> => {
-    try {
-      const productId = parseInt(req.params.id);
-
-      // Verificar si el producto existe
-      const product = await Product.findByPk(productId);
-
-      if (!product) {
-        return res.status(404).json({ message: 'Producto no encontrado' });
-      }
-
-      // Obtener colores asociados con imágenes
-      const colors = await ProductColor.findAll({
-        where: { idprod: productId },
-        order: [['color', 'ASC']] // Ordenar alfabéticamente
+      // toJSON() ya incluye carpetaimg automáticamente
+      return res.status(200).json(product.toJSON());
+    } catch (error) {
+      console.error('Error al obtener producto:', error);
+      return res.status(500).json({ 
+        message: 'Error al obtener producto', 
+        error: (error as Error).message 
       });
-
-      // Si no hay colores definidos, crear algunos predeterminados
-      if (colors.length === 0) {
-        const productData = product.get();
-
-        // Colores predeterminados basados en el tipo de producto
-        const defaultColors = [];
-        const productName = (productData.nombre as string).toLowerCase();
-
-        if (productName.includes('túnel') || productName.includes('tunel') ||
-          productName.includes('plug') || productName.includes('dilat') ||
-          productName.includes('expander')) {
-          defaultColors.push(
-            { color: 'negro', imagen: productData.imagen },
-            { color: 'plateado', imagen: productData.imagen },
-            { color: 'dorado', imagen: productData.imagen }
-          );
-        } else if (productName.includes('barbell') || productName.includes('piercing')) {
-          defaultColors.push(
-            { color: 'plateado', imagen: productData.imagen },
-            { color: 'negro', imagen: productData.imagen },
-            { color: 'dorado', imagen: productData.imagen }
-          );
-        } else {
-          defaultColors.push(
-            { color: 'negro', imagen: productData.imagen },
-            { color: 'plateado', imagen: productData.imagen }
-          );
-        }
-
-        // Devolver colores predeterminados sin guardarlos en la base de datos
-        return res.json(defaultColors);
-      }
-
-      // Preparar respuesta con los colores e imágenes correspondientes
-      // Preparar respuesta con los colores e imágenes correspondientes
-      const colorResponse = colors.map((color: any) => {
-        const colorData = color.get();
-        return {
-          color: colorData.color,
-          imagen: colorData.imagen
-        };
-      });
-
-      return res.json(colorResponse);
-    } catch (err) {
-      console.error('Error al obtener colores:', err);
-      if (err instanceof Error) {
-        return res.status(500).json({ message: err.message });
-      }
-      return res.status(500).json({ message: 'Error al obtener colores del producto' });
     }
-  },
-
-
-  /* Crea un nuevo producto
-   * POST /api/productos */
-  create: async (req: Request, res: Response): Promise<Response> => {
-    try {
-      const productData: IProduct = req.body;
-
-      // Verificar que la categoría existe
-      const category = await Category.findByPk(productData.categoria);
-
-      if (!category) {
-        return res.status(400).json({ message: 'La categoría seleccionada no existe' });
-      }
-
-      // Crear el producto
-      const product = await Product.create(productData);
-
-      // Crear directorio para imágenes si no existe
-      const uploadDir = path.join(__dirname, `../../../uploads/products/${productData.carpetaimg}`);
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-
-      return res.status(201).json(product);
-    } catch (err) {
-      console.error('Error al crear producto:', err);
-      if (err instanceof Error) {
-        return res.status(500).json({ message: err.message });
-      }
-      return res.status(500).json({ message: 'Error al crear el producto' });
-    }
-  },
+  }
 
   /**
-   * Actualiza un producto existente
-   * PUT /api/productos/:id
+   * Obtener productos por categoría
    */
-  update: async (req: Request, res: Response): Promise<Response> => {
+  async getProductsByCategory(req: Request, res: Response): Promise<Response> {
     try {
-      const id = parseInt(req.params.id);
-      const productData: Partial<IProduct> = req.body;
-
-      // Verificar si el producto existe
-      const product = await Product.findByPk(id);
-
-      if (!product) {
-        return res.status(404).json({ message: 'Producto no encontrado' });
-      }
-
-      // Si se cambia la categoría, verificar que exista
-      if (productData.categoria) {
-        const category = await Category.findByPk(productData.categoria);
-
-        if (!category) {
-          return res.status(400).json({ message: 'La categoría seleccionada no existe' });
-        }
-      }
-
-      // Actualizar el producto
-      await product.update(productData);
-
-      return res.json(product);
-    } catch (err) {
-      console.error('Error al actualizar producto:', err);
-      if (err instanceof Error) {
-        return res.status(500).json({ message: err.message });
-      }
-      return res.status(500).json({ message: 'Error al actualizar el producto' });
-    }
-  },
-
-  /* Elimina un producto
-   * DELETE /api/productos/:id */
-  delete: async (req: Request, res: Response): Promise<Response> => {
-    try {
-      const id = parseInt(req.params.id);
-
-      // Verificar si el producto existe
-      const product = await Product.findByPk(id);
-
-      if (!product) {
-        return res.status(404).json({ message: 'Producto no encontrado' });
-      }
-
-      // Eliminar colores asociados
-      await ProductColor.destroy({
-        where: { idprod: id }
+      const { categoryId } = req.params;
+      
+      const products = await db.Product.findAll({
+        where: { category_id: categoryId },
+        include: [{
+          model: db.Category,
+          as: 'category'
+        }]
       });
 
-      // Eliminar el producto
-      await product.destroy();
+      // toJSON() ya incluye carpetaimg automáticamente
+      const productsJson = products.map((product: any) => product.toJSON());
 
-      return res.json({ message: 'Producto eliminado con éxito' });
-    } catch (err) {
-      console.error('Error al eliminar producto:', err);
-      if (err instanceof Error) {
-        return res.status(500).json({ message: err.message });
-      }
-      return res.status(500).json({ message: 'Error al eliminar el producto' });
-    }
-  },
-
-  /* Añade un color a un producto
-   * POST /api/productos/:id/colores */
-  addColor: async (req: Request, res: Response): Promise<Response> => {
-    try {
-      const productId = parseInt(req.params.id);
-      const { color, imagen } = req.body;
-
-      // Verificar si el producto existe
-      const product = await Product.findByPk(productId);
-
-      if (!product) {
-        return res.status(404).json({ message: 'Producto no encontrado' });
-      }
-
-      // Verificar que no exista ya este color para el producto
-      const existingColor = await ProductColor.findOne({
-        where: {
-          idprod: productId,
-          color: color
-        }
+      console.log(`Productos encontrados para categoría ${categoryId}: ${productsJson.length}`);
+      
+      return res.status(200).json(productsJson);
+    } catch (error) {
+      console.error('Error al obtener productos por categoría:', error);
+      return res.status(500).json({ 
+        message: 'Error al obtener productos por categoría', 
+        error: (error as Error).message 
       });
+    }
+  }
 
-      if (existingColor) {
-        return res.status(400).json({ message: 'Ya existe este color para el producto' });
-      }
+  /**
+   * Crear producto
+   */
+  async store(req: Request, res: Response): Promise<Response> {
+    try {
+      const { nombre, descripcion, precio, category_id, imagen } = req.body;
 
-      // Crear el color con la imagen específica
-      const productColor = await ProductColor.create({
-        idprod: productId,
-        color,
+      const newProduct = await db.Product.create({
+        nombre,
+        descripcion,
+        precio,
+        category_id,
         imagen
       });
 
-      return res.status(201).json(productColor);
-    } catch (err) {
-      console.error('Error al añadir color:', err);
-      if (err instanceof Error) {
-        return res.status(500).json({ message: err.message });
-      }
-      return res.status(500).json({ message: 'Error al añadir color al producto' });
+      return res.status(201).json(newProduct.toJSON());
+    } catch (error) {
+      console.error('Error al crear producto:', error);
+      return res.status(500).json({ 
+        message: 'Error al crear producto', 
+        error: (error as Error).message 
+      });
     }
-  },
+  }
 
   /**
-   * Sube imágenes para un producto
-   * POST /api/productos/:id/images
-   * (Requiere middleware upload de Multer)
+   * Actualizar producto
    */
-  uploadImages: async (req: Request, res: Response): Promise<Response> => {
+  async update(req: Request, res: Response): Promise<Response> {
     try {
-      // Req.files es provisto por multer
-      if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
-        return res.status(400).json({ message: 'No se han subido archivos' });
-      }
+      const { id } = req.params;
+      const { nombre, descripcion, precio, category_id, imagen } = req.body;
 
-      const productId = parseInt(req.params.id);
-
-      // Verificar si el producto existe
-      const product = await Product.findByPk(productId);
+      const product = await db.Product.findByPk(id);
 
       if (!product) {
         return res.status(404).json({ message: 'Producto no encontrado' });
       }
 
-      // Obtener la carpeta del producto
-      const carpetaImg = product.get('carpetaimg') as string;
-
-      // Procesar archivos subidos
-      const uploadedFiles = req.files as Express.Multer.File[];
-      const fileDetails = uploadedFiles.map(file => ({
-        filename: file.filename,
-        path: file.path.replace(/\\/g, '/').split('uploads/')[1] // Obtener ruta relativa
-      }));
-
-      // Si es la primera imagen, actualizar el campo imagen del producto
-      if (fileDetails.length > 0 && !product.get('imagen')) {
-        await product.update({ imagen: fileDetails[0].filename });
-      }
-
-      return res.status(200).json({
-        message: 'Imágenes subidas con éxito',
-        files: fileDetails
+      await product.update({
+        nombre,
+        descripcion,
+        precio,
+        category_id,
+        imagen
       });
-    } catch (err) {
-      console.error('Error al subir imágenes:', err);
-      if (err instanceof Error) {
-        return res.status(500).json({ message: err.message });
-      }
-      return res.status(500).json({ message: 'Error al subir imágenes' });
+
+      return res.status(200).json(product.toJSON());
+    } catch (error) {
+      console.error('Error al actualizar producto:', error);
+      return res.status(500).json({ 
+        message: 'Error al actualizar producto', 
+        error: (error as Error).message 
+      });
     }
   }
-};
 
-export default productController;
+  /**
+   * Eliminar producto
+   */
+  async destroy(req: Request, res: Response): Promise<Response> {
+    try {
+      const { id } = req.params;
+
+      const product = await db.Product.findByPk(id);
+
+      if (!product) {
+        return res.status(404).json({ message: 'Producto no encontrado' });
+      }
+
+      await product.destroy();
+
+      return res.status(200).json({ message: 'Producto eliminado correctamente' });
+    } catch (error) {
+      console.error('Error al eliminar producto:', error);
+      return res.status(500).json({ 
+        message: 'Error al eliminar producto', 
+        error: (error as Error).message 
+      });
+    }
+  }
+
+  /**
+   * Obtener imagen del producto
+   */
+  getImage(req: Request, res: Response): void {
+    try {
+      const { categoria, imagen } = req.params;
+      const imagePath = path.join(__dirname, '../../public/images', categoria, imagen);
+
+      if (!fs.existsSync(imagePath)) {
+        res.status(404).json({ message: 'Imagen no encontrada' });
+        return;
+      }
+
+      res.sendFile(imagePath);
+    } catch (error) {
+      console.error('Error al obtener imagen:', error);
+      res.status(500).json({ 
+        message: 'Error al obtener imagen', 
+        error: (error as Error).message 
+      });
+    }
+  }
+}
+
+export default new ProductController();
