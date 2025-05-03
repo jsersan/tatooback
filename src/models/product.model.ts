@@ -1,7 +1,7 @@
-import { Model, DataTypes, Sequelize } from 'sequelize';
+import { Model, DataTypes, Sequelize, ModelStatic } from 'sequelize';
 import { IProduct } from '../interfaces/product.interface';
 
-export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
+export default function(sequelize: Sequelize, dataTypes: typeof DataTypes): ModelStatic<Model<IProduct>> {
   /**
    * Clase Product que extiende el Model de Sequelize
    * Implementa la interfaz IProduct para tipado fuerte
@@ -86,7 +86,7 @@ export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
         type: dataTypes.INTEGER,
         allowNull: false,
         references: {
-          model: 'categories', // Referencia a la tabla de categorías
+          model: 'categoria', // Cambiado de 'categories' a 'categoria'
           key: 'id'
         },
         comment: 'ID de la categoría a la que pertenece el producto'
@@ -95,8 +95,9 @@ export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
     {
       sequelize,
       modelName: 'Product',
-      tableName: 'products', // Nombre específico para la tabla en la BD
-      // Índices para mejorar el rendimiento de las consultas
+      tableName: 'producto', // Cambiado de 'products' a 'producto'
+      // Índices para mejorar el rendimiento de las consultas,
+      timestamps: false,
       indexes: [
         { fields: ['categoria'] }, // Índice para búsquedas por categoría
         { fields: ['nombre'] }     // Índice para búsquedas por nombre
@@ -105,4 +106,4 @@ export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
   );
 
   return Product;
-};
+}

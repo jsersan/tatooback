@@ -1,7 +1,7 @@
-import { Model, DataTypes, Sequelize } from 'sequelize';
+import { Model, DataTypes, Sequelize, ModelStatic } from 'sequelize';
 import { IProductColor } from '../interfaces/product.interface';
 
-export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
+export default function(sequelize: Sequelize, dataTypes: typeof DataTypes): ModelStatic<Model<IProductColor>> {
   /**
    * Clase ProductColor que extiende el Model de Sequelize
    * Implementa la interfaz IProductColor para tipado fuerte
@@ -43,7 +43,7 @@ export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
         type: dataTypes.INTEGER,
         allowNull: false,
         references: {
-          model: 'products', // Referencia a la tabla de productos
+          model: 'producto', // Cambiado de 'products' a 'producto'
           key: 'id'
         },
         comment: 'ID del producto al que pertenece este color'
@@ -62,7 +62,8 @@ export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
     {
       sequelize,
       modelName: 'ProductColor',
-      tableName: 'product_colors', // Nombre específico para la tabla en la BD
+      tableName: 'color', // Cambiado de 'product_colors' a 'color',
+      timestamps: false,
       // Restricción única para evitar duplicados de color para un mismo producto
       indexes: [
         {
@@ -75,4 +76,4 @@ export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
   );
 
   return ProductColor;
-};
+}

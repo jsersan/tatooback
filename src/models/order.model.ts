@@ -1,7 +1,7 @@
-import { Model, DataTypes, Sequelize } from 'sequelize';
+import { Model, DataTypes, Sequelize, ModelStatic } from 'sequelize';
 import { IOrder } from '../interfaces/order.interface';
 
-export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
+export default function(sequelize: Sequelize, dataTypes: typeof DataTypes): ModelStatic<Model<IOrder>> {
   /**
    * Clase Order que extiende el Model de Sequelize
    * Implementa la interfaz IOrder para tipado fuerte
@@ -73,7 +73,8 @@ export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
     {
       sequelize,
       modelName: 'Order',
-      tableName: 'orders', // Nombre específico para la tabla en la BD
+      tableName: 'pedido', // Cambiado a 'pedido' para usar la tabla existente,
+      timestamps: false,
       // Índices para mejorar el rendimiento de las consultas
       indexes: [
         { fields: ['iduser'] }, // Índice para búsquedas por usuario
@@ -83,4 +84,4 @@ export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
   );
 
   return Order;
-};
+}

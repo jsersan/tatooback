@@ -48,9 +48,9 @@ app.use((req: Request, res: Response) => {
 app.use(errorHandler);
 
 // Sincronizar base de datos y arrancar servidor
-db.sequelize.sync({ alter: process.env.NODE_ENV === 'development' })
+db.sequelize.authenticate()
   .then(() => {
-    console.log('Base de datos sincronizada exitosamente');
+    console.log('Conexión a la base de datos establecida correctamente');
     
     app.listen(PORT, () => {
       console.log(`Servidor ejecutándose en el puerto ${PORT}`);
@@ -58,7 +58,7 @@ db.sequelize.sync({ alter: process.env.NODE_ENV === 'development' })
     });
   })
   .catch((err: Error) => {
-    console.error('Error al sincronizar la base de datos:', err.message);
+    console.error('No se pudo conectar a la base de datos:', err.message);
   });
 
 // Manejo de errores no capturados para evitar caídas del servidor

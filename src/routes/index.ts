@@ -11,7 +11,7 @@ const router = Router();
 
 // Registrar las rutas por dominio
 router.use('/users', userRoutes);        // Rutas de usuarios y autenticación
-router.use('/categoria', categoryRoutes); // Rutas de categorías
+router.use('/categorias', categoryRoutes); // Rutas de categorías
 router.use('/productos', productRoutes);   // Rutas de productos
 router.use('/pedido', orderRoutes);      // Rutas de pedidos
 

@@ -1,11 +1,8 @@
-import { Model, DataTypes, Sequelize } from 'sequelize';
+import { Model, DataTypes, Sequelize, ModelStatic } from 'sequelize';
 import { ICategory } from '../interfaces/category.interface';
 
-export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
-  /**
-   * Clase Category que extiende el Model de Sequelize
-   * Implementa la interfaz ICategory para tipado fuerte
-   */
+// Definir un tipo de retorno explícito para la función
+export default function(sequelize: Sequelize, dataTypes: typeof DataTypes): ModelStatic<Model<ICategory>> {
   class Category extends Model<ICategory> implements ICategory {
     // Propiedades del modelo
     public id!: number;
@@ -67,7 +64,8 @@ export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
     {
       sequelize,
       modelName: 'Category',
-      tableName: 'categories', // Nombre específico para la tabla en la BD
+      tableName: 'categoria', // Cambiado a 'categoria' para usar la tabla existente
+      timestamps: false,
       // Hooks (ganchos) para operaciones automáticas
       hooks: {
         // Después de crear, si es categoría principal, establecer padre=id
@@ -81,4 +79,4 @@ export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
   );
 
   return Category;
-};
+}

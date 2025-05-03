@@ -42,7 +42,13 @@ const categoryController = {
    */
   findOne: async (req: Request, res: Response): Promise<Response> => {
     try {
+      // Asegurar que el ID sea un número válido
       const id = parseInt(req.params.id);
+      
+      // Verificar que el ID sea un número válido
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'ID de categoría no válido' });
+      }
       
       // Buscar la categoría por ID
       const category = await Category.findByPk(id, {

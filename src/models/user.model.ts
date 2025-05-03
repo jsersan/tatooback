@@ -1,7 +1,8 @@
-import { Model, DataTypes, Sequelize } from 'sequelize';
+import { timeStamp } from 'console';
+import { Model, DataTypes, Sequelize, ModelStatic } from 'sequelize';
 import { IUser } from '../interfaces/user.interface';
 
-export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
+export default function(sequelize: Sequelize, dataTypes: typeof DataTypes): ModelStatic<Model<IUser>> {
   /**
    * Clase User que extiende el Model de Sequelize
    * Implementa la interfaz IUser para tipado fuerte
@@ -101,9 +102,10 @@ export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
     {
       sequelize,
       modelName: 'User',
-      tableName: 'users' // Nombre específico para la tabla en la BD
+      timestamps: false,
+      tableName: 'user' // Cambiado de 'users' a 'user'
     }
   );
 
   return User;
-};
+}

@@ -1,11 +1,7 @@
-/**
- * Modelo de Línea de Pedido
- * Define la estructura para cada producto incluido en un pedido
- */
-import { Model, DataTypes, Sequelize } from 'sequelize';
+import { Model, DataTypes, Sequelize, ModelStatic } from 'sequelize';
 import { IOrderLine } from '../interfaces/order.interface';
 
-export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
+export default function(sequelize: Sequelize, dataTypes: typeof DataTypes): ModelStatic<Model<IOrderLine>> {
   /**
    * Clase OrderLine que extiende el Model de Sequelize
    * Implementa la interfaz IOrderLine para tipado fuerte
@@ -91,7 +87,8 @@ export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
     {
       sequelize,
       modelName: 'OrderLine',
-      tableName: 'order_lines', // Nombre específico para la tabla en la BD
+      tableName: 'lineapedido', // Cambiado a 'lineapedido' para usar la tabla existente,
+      timestamps: false,
       // Índices para mejorar el rendimiento de las consultas
       indexes: [
         { fields: ['idpedido'] }, // Índice para búsquedas por pedido
@@ -101,4 +98,4 @@ export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
   );
 
   return OrderLine;
-};
+}
