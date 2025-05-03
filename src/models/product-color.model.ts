@@ -25,12 +25,16 @@ export default function(sequelize: Sequelize, dataTypes: typeof DataTypes): Mode
     color_id: {
       type: dataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: 'colors',
-        key: 'id'
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'CASCADE'
+    },
+    color: {
+      type: dataTypes.STRING,
+      allowNull: false,
+      comment: 'Nombre del color'
+    },
+    imagen: {
+      type: dataTypes.STRING,
+      allowNull: false,
+      comment: 'Nombre de archivo de la imagen para este color'
     }
   }, {
     modelName: 'ProductColor',
@@ -48,11 +52,6 @@ export default function(sequelize: Sequelize, dataTypes: typeof DataTypes): Mode
     ProductColor.belongsTo(models.Product, {
       foreignKey: 'product_id',
       as: 'product'
-    });
-    
-    ProductColor.belongsTo(models.Color, {
-      foreignKey: 'color_id',
-      as: 'color'
     });
   };
 

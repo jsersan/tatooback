@@ -8,6 +8,9 @@ dotenv.config();
 import productModel from './product.model';
 import categoryModel from './category.model';
 import productColorModel from './product-color.model';
+import userModel from './user.model';
+import orderModel from './order.model';
+import orderLineModel from './order-line.model';
 
 // Crear instancia de Sequelize usando directamente las variables de entorno
 const sequelize = new Sequelize(
@@ -33,7 +36,10 @@ const db: any = {
   Sequelize,
   Product: productModel(sequelize, DataTypes),
   Category: categoryModel(sequelize, DataTypes),
-  ProductColor: productColorModel(sequelize, DataTypes)
+  ProductColor: productColorModel(sequelize, DataTypes),
+  User: userModel(sequelize, DataTypes),
+  Order: orderModel(sequelize, DataTypes),
+  OrderLine: orderLineModel(sequelize, DataTypes)
 };
 
 // Establecer asociaciones entre modelos

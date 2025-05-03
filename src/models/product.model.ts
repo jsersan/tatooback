@@ -121,7 +121,7 @@ export default function(sequelize: Sequelize, dataTypes: typeof DataTypes): Mode
    */
   (ProductModel as any).associate = (models: any) => {
     ProductModel.belongsTo(models.Category, {
-      foreignKey: 'category_id',
+      foreignKey: 'category_id', // Cambiado de 'category_id' (asegúrate que corresponde)
       as: 'category'
     });
   };
